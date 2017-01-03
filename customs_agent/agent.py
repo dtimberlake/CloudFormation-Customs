@@ -24,12 +24,12 @@ def _timeout(seconds):
 
 class Agent(object):
     def __init__(self):
-        self._session = requests.session()
+        self.session = requests.session()
         self.logger = self._init_loggers()
 
     def __call__(self, event, context):
         response = self.calculate_response(event, context)
-        response.send()
+        response.send(self.session)
 
     def calculate_response(self, event, context):
         response = Response(event)

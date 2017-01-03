@@ -70,7 +70,7 @@ class TestAgent(object):
 
         agent(event, context)
 
-        response.send.assert_called_once()
+        response.send.assert_called_once_with(agent.session)
 
     def test_unimplemented_methods(self, event, context):
         agent = Agent()
