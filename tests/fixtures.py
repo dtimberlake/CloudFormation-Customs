@@ -19,7 +19,9 @@ def event():
 @pytest.fixture()
 def context():
     class Context(object):
-        get_remaining_time_in_millis = 2000
         log_stream_name = "log_stream_name"
+
+        def get_remaining_time_in_millis(self):
+            return 2000
 
     return Context()

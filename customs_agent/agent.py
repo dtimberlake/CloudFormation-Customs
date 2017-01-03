@@ -36,7 +36,7 @@ class Agent(object):
         self.logger = self._get_request_logger(event['RequestId'])
         try:
             with _timeout((
-                              context.get_remaining_time_in_millis - 500) / 1000.0):
+                              context.get_remaining_time_in_millis() - 500) / 1000.0):
                 action = self._parse_action(event)
                 action(event, context, response)
 

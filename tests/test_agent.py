@@ -140,7 +140,9 @@ class TestAgent(object):
         agent = MyAgent()
 
         event['RequestType'] = 'Create'
-        context.get_remaining_time_in_millis = 501
+
+        mocker.patch.object(context, 'get_remaining_time_in_millis')
+        context.get_remaining_time_in_millis.return_value = 501
 
         response = agent.calculate_response(event, context)
 
