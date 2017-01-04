@@ -9,7 +9,7 @@ setup_options = dict(
     description="Helper library for building AWS CloudFormation custom resources.",
     long_description=open("README.md").read(),
     author="Daniel Timberlake",
-    package=find_packages(exclude=['tests*']),
+    packages=find_packages(exclude=['tests*']),
     license="Apache License 2.0",
 )
 
