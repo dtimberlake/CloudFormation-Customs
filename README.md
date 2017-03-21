@@ -3,7 +3,7 @@
 **Note**: This library is still in beta and the API may change.
 
 ## Introduction
-Customs Agent is a helper library for building AWS CloudFormation custom resources. Now you can focus on writing the provisioning logic for your custom resource and let Customs Agent handle the individual request routing and responses.
+Customs Agent is a helper library for building AWS CloudFormation custom resources with AWS Lambda. Now you can focus on writing the provisioning logic for your custom resource and let Customs Agent handle the individual request routing and responses.
 
 ## Features
 
