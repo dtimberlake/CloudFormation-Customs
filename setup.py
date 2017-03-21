@@ -7,7 +7,7 @@ setup_options = dict(
     url='https://github.com/dtimberlake/customs_agent',
     version=customs_agent.__version__,
     description="Helper library for building AWS CloudFormation custom resources.",
-    long_description=open("README.md").read(),
+    long_description=open("README.rst").read(),
     author="Daniel Timberlake",
     packages=find_packages(exclude=['tests*']),
     license="Apache License 2.0",
