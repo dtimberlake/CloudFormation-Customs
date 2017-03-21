@@ -9,20 +9,6 @@ from exceptions import InvalidRequestType, TimeoutError
 from response import Response
 
 
-@contextmanager
-def _timeout(seconds):
-    def _handle_timeout(_signum, _frame):
-        raise TimeoutError
-
-    signal.signal(signal.SIGALRM, _handle_timeout)
-    signal.setitimer(signal.ITIMER_REAL, seconds)
-    try:
-        yield
-    finally:
-        signal.signal(signal.SIGALRM, signal.SIG_DFL)
-        signal.setitimer(signal.ITIMER_REAL, 0)
-
-
 class Agent(object):
     __metaclass__ = ABCMeta
 
@@ -114,3 +100,17 @@ class InvalidAgent(Agent):
         response.status = "FAILED"
         response.data = "Must provide implementations for all event "\
                         "handlers of Agent."
+
+
+@contextmanager
+def _timeout(seconds):
+    def _handle_timeout(_signum, _frame):
+        raise TimeoutError
+
+    signal.signal(signal.SIGALRM, _handle_timeout)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGALRM, signal.SIG_DFL)
+        signal.setitimer(signal.ITIMER_REAL, 0)
