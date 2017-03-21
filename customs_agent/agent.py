@@ -34,7 +34,7 @@ class Agent(object):
             with _timeout((
                               context.get_remaining_time_in_millis() - 500) / 1000.0):
                 action = self._parse_action(event)
-                action(event, response)
+                action(event, context, response)
 
         except InvalidRequestType:
             response.reason = 'Invalid RequestType'
@@ -45,15 +45,15 @@ class Agent(object):
         return response
 
     @abstractmethod
-    def create(self, request, response):
+    def create(self, event, context, response):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, request, response):
+    def update(self, event, context, response):
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, request, response):
+    def delete(self, event, context, response):
         raise NotImplementedError
 
     def _init_loggers(self, log_level='INFO'):
@@ -87,19 +87,14 @@ class InvalidAgent(Agent):
                           "handlers of Agent."
         return response
 
-    def create(self, request, response):
-        self._handle_request(response)
+    def create(self, event, context, response):
+        pass
 
-    def update(self, request, response):
-        self._handle_request(response)
+    def update(self, event, context, response):
+        pass
 
-    def delete(self, request, response):
-        self._handle_request(response)
-
-    def _handle_request(self, response):
-        response.status = "FAILED"
-        response.data = "Must provide implementations for all event "\
-                        "handlers of Agent."
+    def delete(self, event, context, response):
+        pass
 
 
 @contextmanager
