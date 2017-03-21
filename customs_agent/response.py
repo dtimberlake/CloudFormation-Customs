@@ -3,30 +3,66 @@ import json
 
 class Response(object):
     def __init__(self, event):
-        self.response_url = event['ResponseURL']
-        self.request_type = event['RequestType']
-        self.stack_id = event['StackId']
-        self.request_id = event['RequestId']
-        self.logical_resource_id = event['LogicalResourceId']
-        self.data = ''
-        self.reason = ''
-        self.status = 'FAILED'
+        self._response_url = event['ResponseURL']
+        self._request_type = event['RequestType']
+        self._stack_id = event['StackId']
+        self._request_id = event['RequestId']
+        self._logical_resource_id = event['LogicalResourceId']
+        self._data = ''
+        self._reason = ''
+        self._status = 'FAILED'
+        self._physical_resource_id = event.get('PhysicalResourceId')
 
-        # locks attributes since they must match what was sent in via the event
-        self._locked_attributes = ['request_type', 'stack_id', 'request_id',
-                                   'logical_resource_id', 'response_url']
+    @property
+    def response_url(self):
+        return self._response_url
 
-        physical_resource_id = event.get('PhysicalResourceId')
-        if physical_resource_id:
-            self.physical_resource_id = event.get('PhysicalResourceId')
-            self._locked_attributes.append('physical_resource_id')
+    @property
+    def request_type(self):
+        return self._request_type
 
-    def __setattr__(self, name, value):
-        if name in getattr(self, '_locked_attributes', []):
-            raise AttributeError('Cannot change {}'.format(name))
-        elif name == 'status' and value not in ['SUCCESS', 'FAILED']:
+    @property
+    def stack_id(self):
+        return self._stack_id
+
+    @property
+    def request_id(self):
+        return self._request_id
+
+    @property
+    def logical_resource_id(self):
+        return self._logical_resource_id
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = value
+
+    @property
+    def reason(self):
+        return self._reason
+
+    @reason.setter
+    def reason(self, value):
+        self._reason = value
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        if value in ['SUCCESS', 'FAILED']:
+            self._status = value
+        else:
             raise AttributeError('status must be either "SUCCESS" or "FAILED"')
-        super(Response, self).__setattr__(name, value)
+
+    @property
+    def physical_resource_id(self):
+        return self._physical_resource_id
 
     def send(self, session):
         body = {

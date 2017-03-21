@@ -40,14 +40,6 @@ class TestResponse(object):
         with pytest.raises(AttributeError):
             response.status = 'NotFailedOrSuccess'
 
-    def test_physical_resource_id_not_set_if_not_in_event(self, event):
-        del event['PhysicalResourceId']
-
-        response = Response(event=event)
-
-        with pytest.raises(AttributeError):
-            response.physical_resource_id
-
     def test_send(self, event, mocker):
         response = Response(event=event)
 
