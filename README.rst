@@ -26,7 +26,7 @@ Install
 
 Temporary install while submit to PyPi:
 
-``pip install git+git://github.com/dtimberlake/customs_agent.git``
+``pip install customs_agent``
 
 Getting Started
 ---------------
