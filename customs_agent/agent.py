@@ -1,5 +1,6 @@
 import logging
 import signal
+from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 
 from botocore.vendored import requests
@@ -23,6 +24,15 @@ def _timeout(seconds):
 
 
 class Agent(object):
+    __metaclass__ = ABCMeta
+
+    def __new__(cls, *args, **kwargs):
+        try:
+            new_class = super(Agent, cls).__new__(cls, *args, **kwargs)
+        except TypeError:
+            new_class = InvalidAgent()
+        return new_class
+
     def __init__(self):
         self.session = requests.session()
         self.logger = self._init_loggers()
@@ -38,7 +48,7 @@ class Agent(object):
             with _timeout((
                               context.get_remaining_time_in_millis() - 500) / 1000.0):
                 action = self._parse_action(event)
-                action(event, context, response)
+                action(event, response)
 
         except InvalidRequestType:
             response.reason = 'Invalid RequestType'
@@ -48,13 +58,16 @@ class Agent(object):
 
         return response
 
-    def create(self, event, context, logger):
+    @abstractmethod
+    def create(self, request, response):
         raise NotImplementedError
 
-    def update(self, event, context, logger):
+    @abstractmethod
+    def update(self, request, response):
         raise NotImplementedError
 
-    def delete(self, event, context, logger):
+    @abstractmethod
+    def delete(self, request, response):
         raise NotImplementedError
 
     def _init_loggers(self, log_level='INFO'):
@@ -79,3 +92,25 @@ class Agent(object):
         if not action:
             raise InvalidRequestType
         return action
+
+
+class InvalidAgent(Agent):
+    def calculate_response(self, event, context):
+        response = Response(event)
+        response.reason = "Must provide implementations for all event "\
+                          "handlers of Agent."
+        return response
+
+    def create(self, request, response):
+        self._handle_request(response)
+
+    def update(self, request, response):
+        self._handle_request(response)
+
+    def delete(self, request, response):
+        self._handle_request(response)
+
+    def _handle_request(self, response):
+        response.status = "FAILED"
+        response.data = "Must provide implementations for all event "\
+                        "handlers of Agent."

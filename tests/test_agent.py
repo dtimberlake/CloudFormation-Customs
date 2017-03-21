@@ -6,27 +6,22 @@ from botocore.vendored import requests
 import pytest
 
 from customs_agent import Agent, Response
+from customs_agent.agent import InvalidAgent
 from customs_agent.exceptions import InvalidRequestType, TimeoutError
 from fixtures import event, context
 
 logging.getLogger().addHandler(logging.StreamHandler())
 
 
-@pytest.fixture()
-def agent():
-    class MyAgent(Agent):
-        def create(self, event, context, logger):
-            return 'PhysicalResourceId', {'method': 'create'}
+class BaseTestAgent(Agent):
+    def create(self, request, response):
+        return 'PhysicalResourceId', {'method': 'create'}
 
-        def update(self, event, context, logger):
-            return 'PhysicalResourceId', {'method': 'update'}
+    def update(self, request, response):
+        return 'PhysicalResourceId', {'method': 'update'}
 
-        def delete(self, event, context, logger):
-            return 'PhysicalResourceId', {'method': 'delete'}
-
-    agent = MyAgent()
-
-    return agent
+    def delete(self, request, response):
+        return 'PhysicalResourceId', {'method': 'delete'}
 
 
 def assert_put_called_with(agent, event, status, data=None, reason=None,
@@ -56,11 +51,11 @@ def assert_logging_levels(log_level, boto_log_level):
 
 class TestAgent(object):
     def test_agent_init_sets_up_logger(self):
-        agent = Agent()
+        agent = BaseTestAgent()
         assert agent.logger.logger.getEffectiveLevel() == logging.INFO
 
     def test_agent(self, event, context, mocker):
-        agent = Agent()
+        agent = BaseTestAgent()
         response = Response(event)
 
         mocker.patch.object(agent, 'calculate_response')
@@ -74,22 +69,21 @@ class TestAgent(object):
 
     def test_unimplemented_methods(self, event, context):
         agent = Agent()
+        event['RequestType'] = 'Create'
 
-        with pytest.raises(NotImplementedError):
-            event['RequestType'] = 'Create'
-            agent.calculate_response(event, context)
+        response = agent.calculate_response(event, context)
 
-        with pytest.raises(NotImplementedError):
-            event['RequestType'] = 'Update'
-            agent.calculate_response(event, context)
+        expected_reason = "Must provide implementations for all event "\
+                          "handlers of Agent."
+        expected_status = "FAILED"
 
-        with pytest.raises(NotImplementedError):
-            event['RequestType'] = 'Delete'
-            agent.calculate_response(event, context)
+        assert isinstance(agent, InvalidAgent)
+        assert response.reason == expected_reason
+        assert response.status == expected_status
 
     def test_calculate_response(self, event, context):
-        class MyAgent(Agent):
-            def create(self, event, context, response):
+        class MyAgent(BaseTestAgent):
+            def create(self, request, response):
                 response.data = 'create data'
                 response.status = 'SUCCESS'
         agent = MyAgent()
@@ -110,8 +104,8 @@ class TestAgent(object):
         assert response.status == 'SUCCESS'
 
     def test_calculate_response_failed_action(self, event, context):
-        class MyAgent(Agent):
-            def create(self, event, context, response):
+        class MyAgent(BaseTestAgent):
+            def create(self, request, response):
                 response.reason = 'reason for failure'
         agent = MyAgent()
 
@@ -125,7 +119,7 @@ class TestAgent(object):
     def test_calculate_response_bad_request_type(self, event, context):
         event['RequestType'] = 'BadRequestType'
 
-        agent = Agent()
+        agent = BaseTestAgent()
 
         response = agent.calculate_response(event, context)
 
@@ -133,8 +127,8 @@ class TestAgent(object):
         assert response.reason == 'Invalid RequestType'
 
     def test_calculate_response_timeout(self, event, context, mocker):
-        class MyAgent(Agent):
-            def create(self, event, context, response):
+        class MyAgent(BaseTestAgent):
+            def create(self, request, response):
                 time.sleep(.002)
 
         agent = MyAgent()
@@ -150,8 +144,8 @@ class TestAgent(object):
         assert response.reason == 'Function timed out'
 
     def test_calculate_response_updates_logger(self, event, context):
-        class MyAgent(Agent):
-            def create(self, event, context, response):
+        class MyAgent(BaseTestAgent):
+            def create(self, request, response):
                 pass
 
         agent = MyAgent()
