@@ -2,12 +2,8 @@ import json
 import logging
 import time
 
-from botocore.vendored import requests
-import pytest
-
 from customs_agent import Agent, Response
 from customs_agent.agent import InvalidAgent
-from customs_agent.exceptions import InvalidRequestType, TimeoutError
 from fixtures import event, context
 
 logging.getLogger().addHandler(logging.StreamHandler())
@@ -73,7 +69,7 @@ class TestAgent(object):
 
         response = agent.calculate_response(event, context)
 
-        expected_reason = "Must provide implementations for all event "\
+        expected_reason = "Must provide implementations for all event " \
                           "handlers of Agent."
         expected_status = "FAILED"
 
@@ -86,6 +82,7 @@ class TestAgent(object):
             def create(self, request, response):
                 response.data = 'create data'
                 response.status = 'SUCCESS'
+
         agent = MyAgent()
 
         event['RequestType'] = 'Create'
@@ -107,6 +104,7 @@ class TestAgent(object):
         class MyAgent(BaseTestAgent):
             def create(self, request, response):
                 response.reason = 'reason for failure'
+
         agent = MyAgent()
 
         event['RequestType'] = 'Create'
@@ -157,3 +155,16 @@ class TestAgent(object):
         agent.calculate_response(event, context)
 
         assert agent.logger.extra == {'requestid': 'RequestId'}
+
+    def test_invalid_agent(self, event, context):
+        class MyAgent(Agent):
+            def create(self, request, resposne):
+                pass
+
+        agent = MyAgent()
+
+        response = agent.calculate_response(event, context)
+
+        assert response.status == 'FAILED'
+        assert response.reason == "Must provide implementations for all event " \
+                                  "handlers of Agent."
