@@ -2,6 +2,9 @@
 Customs Agent
 =============
 
+.. image:: https://travis-ci.org/dtimberlake/customs_agent.svg?branch=master
+    :target: https://travis-ci.org/dtimberlake/customs_agent
+
 **Note**: This library is still in beta and the API may change.
 
 Introduction
