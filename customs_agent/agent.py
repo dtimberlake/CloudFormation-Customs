@@ -9,20 +9,6 @@ from exceptions import InvalidRequestType, TimeoutError
 from response import Response
 
 
-@contextmanager
-def _timeout(seconds):
-    def _handle_timeout(_signum, _frame):
-        raise TimeoutError
-
-    signal.signal(signal.SIGALRM, _handle_timeout)
-    signal.setitimer(signal.ITIMER_REAL, seconds)
-    try:
-        yield
-    finally:
-        signal.signal(signal.SIGALRM, signal.SIG_DFL)
-        signal.setitimer(signal.ITIMER_REAL, 0)
-
-
 class Agent(object):
     """Base class that should be inherited from your CustomAgents"""
     __metaclass__ = ABCMeta
@@ -54,7 +40,7 @@ class Agent(object):
             with _timeout((
                               context.get_remaining_time_in_millis() - 500) / 1000.0):
                 action = self._parse_action(event)
-                action(event, response)
+                action(event, context, response)
 
         except InvalidRequestType:
             response.reason = 'Invalid RequestType'
@@ -119,3 +105,17 @@ class InvalidAgent(Agent):
 
     def delete(self, request, response):
         pass
+
+@contextmanager
+def _timeout(seconds):
+    def _handle_timeout(_signum, _frame):
+        raise TimeoutError
+
+    signal.signal(signal.SIGALRM, _handle_timeout)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGALRM, signal.SIG_DFL)
+        signal.setitimer(signal.ITIMER_REAL, 0)
+>>>>>>> ac6a0245f205e10b4353223bdbca1b8001875d43

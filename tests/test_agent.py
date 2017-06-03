@@ -10,13 +10,13 @@ logging.getLogger().addHandler(logging.StreamHandler())
 
 
 class BaseTestAgent(Agent):
-    def create(self, request, response):
+    def create(self, event, context, response):
         return 'PhysicalResourceId', {'method': 'create'}
 
-    def update(self, request, response):
+    def update(self, event, context, response):
         return 'PhysicalResourceId', {'method': 'update'}
 
-    def delete(self, request, response):
+    def delete(self, event, context, response):
         return 'PhysicalResourceId', {'method': 'delete'}
 
 
@@ -79,7 +79,7 @@ class TestAgent(object):
 
     def test_calculate_response(self, event, context):
         class MyAgent(BaseTestAgent):
-            def create(self, request, response):
+            def create(self, event, context, response):
                 response.data = 'create data'
                 response.status = 'SUCCESS'
 
@@ -102,7 +102,7 @@ class TestAgent(object):
 
     def test_calculate_response_failed_action(self, event, context):
         class MyAgent(BaseTestAgent):
-            def create(self, request, response):
+            def create(self, event, context, response):
                 response.reason = 'reason for failure'
 
         agent = MyAgent()
@@ -126,7 +126,7 @@ class TestAgent(object):
 
     def test_calculate_response_timeout(self, event, context, mocker):
         class MyAgent(BaseTestAgent):
-            def create(self, request, response):
+            def create(self, event, context, response):
                 time.sleep(.002)
 
         agent = MyAgent()
@@ -143,7 +143,7 @@ class TestAgent(object):
 
     def test_calculate_response_updates_logger(self, event, context):
         class MyAgent(BaseTestAgent):
-            def create(self, request, response):
+            def create(self, event, context, response):
                 pass
 
         agent = MyAgent()
@@ -168,3 +168,28 @@ class TestAgent(object):
         assert response.status == 'FAILED'
         assert response.reason == "Must provide implementations for all event " \
                                   "handlers of Agent."
+
+    def test_calculate_response_passes_event_and_context_in_request(self, event, context):
+        class MyAgent(BaseTestAgent):
+            def create(self, this_event, this_context, response):
+                assert this_event == event
+                assert this_context == context
+
+            def update(self, this_event, this_context, response):
+                assert this_event == event
+                assert this_context == context
+
+            def delete(self, this_event, this_context, response):
+                assert this_event == event
+                assert this_context == context
+
+        agent = MyAgent()
+
+        event['RequestType'] = 'Create'
+        agent.calculate_response(event, context)
+
+        event['RequestType'] = 'Update'
+        agent.calculate_response(event, context)
+
+        event['RequestType'] = 'Delete'
+        agent.calculate_response(event, context)

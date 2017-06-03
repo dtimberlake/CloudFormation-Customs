@@ -101,3 +101,21 @@ class TestResponse(object):
                 'LogicalResourceId': event['LogicalResourceId'],
                 'Reason': ''
             }))
+
+    def test_success(self, event):
+        expected_message = 'success message'
+        response = Response(event)
+
+        response.success(expected_message)
+
+        assert response.reason == expected_message
+        assert response.status == 'SUCCESS'
+
+    def test_failed(self, event):
+        expected_message = 'failed message'
+        response = Response(event)
+
+        response.failed(expected_message)
+
+        assert response.reason == expected_message
+        assert response.status == 'FAILED'

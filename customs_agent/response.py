@@ -79,3 +79,11 @@ class Response(object):
             body['Reason'] = self.reason
 
         session.put(self.response_url, data=json.dumps(body))
+
+    def success(self, message):
+        self.status = 'SUCCESS'
+        self.reason = message
+
+    def failed(self, message):
+        self.status = 'FAILED'
+        self.reason = message
