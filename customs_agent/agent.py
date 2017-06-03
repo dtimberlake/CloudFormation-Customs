@@ -118,4 +118,3 @@ def _timeout(seconds):
     finally:
         signal.signal(signal.SIGALRM, signal.SIG_DFL)
         signal.setitimer(signal.ITIMER_REAL, 0)
->>>>>>> ac6a0245f205e10b4353223bdbca1b8001875d43
