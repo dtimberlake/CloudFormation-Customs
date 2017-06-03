@@ -10,9 +10,15 @@ from response import Response
 
 
 class Agent(object):
+    """Base class that should be inherited from your CustomAgents"""
     __metaclass__ = ABCMeta
 
     def __new__(cls, *args, **kwargs):
+        """Returns InvalidAgent class if all methods aren't set
+
+        This is important so you don't have a runtime error during execution,
+        which will cause your CloudFormation resource to hang indefinitely.
+        """
         try:
             new_class = super(Agent, cls).__new__(cls, *args, **kwargs)
         except TypeError:
@@ -45,16 +51,16 @@ class Agent(object):
         return response
 
     @abstractmethod
-    def create(self, event, context, response):
-        raise NotImplementedError
+    def create(self, request, response):
+        pass
 
     @abstractmethod
-    def update(self, event, context, response):
-        raise NotImplementedError
+    def update(self, request, response):
+        pass
 
     @abstractmethod
-    def delete(self, event, context, response):
-        raise NotImplementedError
+    def delete(self, request, response):
+        pass
 
     def _init_loggers(self, log_level='INFO'):
         logger = logging.getLogger('CFCustomsAgent')
@@ -81,21 +87,24 @@ class Agent(object):
 
 
 class InvalidAgent(Agent):
+    def __call__(self, event, context):
+        response = self.calculate_response(event, context)
+        response.send(self.session)
+
     def calculate_response(self, event, context):
         response = Response(event)
         response.reason = "Must provide implementations for all event "\
                           "handlers of Agent."
         return response
 
-    def create(self, event, context, response):
+    def create(self, request, response):
         pass
 
-    def update(self, event, context, response):
+    def update(self, request, response):
         pass
 
-    def delete(self, event, context, response):
+    def delete(self, request, response):
         pass
-
 
 @contextmanager
 def _timeout(seconds):
